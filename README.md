@@ -6,8 +6,6 @@ Grabs saved Images from reddit, saves and logs them
 Follow the Tutorial here to get an App Client ID and App Client Secret:
 https://github.com/reddit-archive/reddit/wiki/OAuth2-Quick-Start-Example
 
-After that add your Username and your password into the corresponding fields in line 12 of LinkLookup.py
-
 ## 2 Create Folder Structure
 For the script to work properly you need to create a "logs.txt" file and an "savedImages" Folder
 
