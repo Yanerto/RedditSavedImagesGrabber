@@ -71,6 +71,6 @@ for x in range(0,upperLimit):
             myFile.write(textToAttach)
         #Remove Post from favourites
         post_data = {"id": dataResponse["data"]["children"][x]["data"]["name"]}
-        #response = requests.post("https://oauth.reddit.com/api/unsave", data=post_data, headers=headers)
+        response = requests.post("https://oauth.reddit.com/api/unsave", data=post_data, headers=headers)
     else:
         print("Not in Whitelist")
