@@ -8,18 +8,33 @@ import os.path
 import time
 import getpass
 
-#Get Credentials of user
 print("Welcome!")
-username    = input("Username of Reddit Account: ")
-password    = getpass.getpass("Password of Reddit Account: ")
-AppID       = input("App Client ID: ")
-AppSecret   = input("App Secret: ")
+
+#Get Credentials of user
+username = ""
+AppID = ""
+AppSecret = ""
+
+if len(sys.argv) == 4:
+	username = sys.argv[1]
+	AppID = sys.argv[2]
+	AppSecret = sys.argv[3]
+	password = getpass.getpass("Password of Reddit Account: ")
+else:
+	username    = input("Username of Reddit Account: ")
+	password    = getpass.getpass("Password of Reddit Account: ")
+	AppID       = input("App Client ID: ")
+	AppSecret   = input("App Secret: ")
 
 #Get Authentication Token
 client_auth = requests.auth.HTTPBasicAuth(AppID, AppSecret)
 post_data = {"grant_type": "password", "username": "%s" % username, "password": "%s" % password}
 headers = {"User-Agent": "SavedImagesGrabber/1.0 by Yanerto"}
 token = requests.post("https://www.reddit.com/api/v1/access_token", auth=client_auth, data=post_data, headers=headers)
+
+#Check if password was correct, else quit script
+if(len(token.json())) == 1:
+	sys.exit("Wrong Password. Exiting Script")
 
 #Get saved posts from API
 headers = {"Authorization": "bearer " + token.json()['access_token'], "User-Agent": "SavedImagesGrabber/1.0 by Yanerto"}
@@ -56,6 +71,6 @@ for x in range(0,upperLimit):
             myFile.write(textToAttach)
         #Remove Post from favourites
         post_data = {"id": dataResponse["data"]["children"][x]["data"]["name"]}
-        response = requests.post("https://oauth.reddit.com/api/unsave", data=post_data, headers=headers)
+        #response = requests.post("https://oauth.reddit.com/api/unsave", data=post_data, headers=headers)
     else:
         print("Not in Whitelist")
