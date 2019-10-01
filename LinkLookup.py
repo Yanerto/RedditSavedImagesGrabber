@@ -6,18 +6,25 @@ import urllib.request
 import sys
 import os.path
 import time
+import getpass
+
+#Get Credentials of user
+print("Welcome!")
+username    = input("Username of Reddit Account: ")
+password    = getpass.getpass("Password of Reddit Account: ")
+AppID       = input("App Client ID: ")
+AppSecret   = input("App Secret: ")
 
 #Get Authentication Token
-client_auth = requests.auth.HTTPBasicAuth('App Client ID here', 'APP Secret Here')
-post_data = {"grant_type": "password", "username": "USERNAME HERE", "password": "PASSWORD HERE"}
+client_auth = requests.auth.HTTPBasicAuth(AppID, AppSecret)
+post_data = {"grant_type": "password", "username": "%s" % username, "password": "%s" % password}
 headers = {"User-Agent": "SavedImagesGrabber/1.0 by Yanerto"}
 token = requests.post("https://www.reddit.com/api/v1/access_token", auth=client_auth, data=post_data, headers=headers)
 
 #Get saved posts from API
 headers = {"Authorization": "bearer " + token.json()['access_token'], "User-Agent": "SavedImagesGrabber/1.0 by Yanerto"}
-response = requests.get("https://oauth.reddit.com/user/USERNAME HERE/saved",headers=headers, params=post_data)
+response = requests.get("https://oauth.reddit.com/user/%s/saved" % username,headers=headers, params=post_data)
 dataResponse = response.json()
-
 
 #Iterate through Listing, save every image
 upperLimit = len(dataResponse["data"]["children"])
