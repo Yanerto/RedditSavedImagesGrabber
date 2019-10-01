@@ -14,6 +14,8 @@ Place both of them inside a folder together with LinkLookup.py and Scrubber.py
 ## 3 Run Script
 Run the Script, it should output which images are being downloaded, and log them to logs.txt
 
+PArameters can be passed as following: LinkLookup.py [Username] [AppID] [AppSecret]
+
 It also unsaves every post it downloads
 
 ## 4 Deleting
