@@ -12,12 +12,14 @@ import getpass
 def getAuthToken(username, AppID, AppSecret, password):
 	client_auth = requests.auth.HTTPBasicAuth(AppID, AppSecret)
 	post_data = {"grant_type": "password", "username": "%s" % username, "password": "%s" % password}
-	headers = {"User-Agent": "SavedImagesGrabber/1.1 by Yanerto"}
-	token = requests.post("https://www.reddit.com/api/v1/access_token", auth=client_auth, data=post_data, headers=headers)
+	headerAuth = {"User-Agent": "SavedImagesGrabber/1.1 by Yanerto"}
+	token = requests.post("https://www.reddit.com/api/v1/access_token", auth=client_auth, data=post_data, headers=headerAuth)
 
 	return token;
 
+#Downloads image from url and saves as fileName
 def downloadPost(url, fileName):
+
 	#Check if fileName already exists, create new Name with Timestamp if true
 	if os.path.isfile(fileName):
 		ts = time.time()
@@ -31,11 +33,44 @@ def downloadPost(url, fileName):
 
 	return;
 
+#Removes the post with given id from saved posts
 def unsavePost(id):
 	post_data = {"id": id}
-	print(post_data)
-	reponse = requests.post("https://oauth.reddit.com/api/unsave", data=post_data, headers = headers)
+	reponse = requests.post("https://oauth.reddit.com/api/unsave", data=post_data, headers = header)
 	return;
+
+#Saves all posts of page with given listingVariable
+def savePage(listingVariable):
+	#Query Reddit API
+	post_data = {"after": listingVariable}
+	response = requests.get("https://oauth.reddit.com/user/%s/saved" % username, headers=header)
+	dataResponse = response.json()
+	upperLimit = len(dataResponse["data"]["children"])
+
+	#Iterate through page, save every image
+	for x in range(0, int(upperLimit)):
+		if dataResponse["data"]["children"][x]["kind"] == "t1":
+			print("[%d] Comment" % (x))
+			continue
+
+		url = dataResponse["data"]["children"][x]["data"]["url"]
+		menuListing = "[%d]  " % (x) + url
+		print(menuListing)
+		fileName = "savedImages/" + url.split("/")[-1]
+		whitelist = ['awwni.me', 'i.imgur', 'i.redd.it']
+
+		#If post URL is in whitelist, aka if post is an image
+		if any(x in url for x in whitelist):
+			downloadPost(url,fileName)
+			#Log Post to text file
+			with open("logs.txt", "a") as myFile:
+				textToAttach = fileName[12:] + "                               " + "https://old.reddit.com" + dataResponse["data"]["children"][x]["data"]["permalink"] + " \n"
+				myFile.write(textToAttach)
+			unsavePost(dataResponse["data"]["children"][x]["data"]["name"])
+		else:
+			print("Not in Whitelist")
+
+	return dataResponse["data"]["after"];
 
 
 print("Welcome!")
@@ -63,27 +98,11 @@ token = getAuthToken(username, AppID, AppSecret, password)
 if(len(token.json())) == 1:
 	sys.exit("Wrong Password. Exiting Script")
 
-#Get saved posts from API
-headers = {"Authorization": "bearer " + token.json()['access_token'], "User-Agent": "SavedImagesGrabber/1.1 by Yanerto"}
-response = requests.get("https://oauth.reddit.com/user/%s/saved" % username,headers=headers)
-dataResponse = response.json()
 
-#Iterate through Listing, save every image
-upperLimit = len(dataResponse["data"]["children"])
-for x in range(0,upperLimit):
-    if dataResponse["data"]["children"][x]["kind"] == "t1":
-        print("[%d] Comment" % (x))
-        continue
+#Ask for pages
+maxPages = input("How many pages to save?")
+listingVariable = ""
+header = {"Authorization": "bearer " + token.json()['access_token'], "User-Agent": "SavedImagesGrabber/1.0 by Yanerto"}
 
-    url = dataResponse["data"]["children"][x]["data"]["url"]
-    #print URL, for safety purpose
-    menuListing = "[%d]	" % (x) + url
-    print(menuListing)
-    fileName = "savedImages/" + url.split("/")[-1]
-    whitelist = ['awwni.me', 'i.imgur', 'i.redd.it']
-    #If post URL is in whitelist, aka if post is an image
-    if any(x in url for x in whitelist):
-     downloadPost(url, fileName)
-     unsavePost(dataResponse["data"]["children"][x]["data"]["name"])
-    else:
-     print("Not in Whitelist")
+for k in range(0, int(maxPages)):
+    listingVariable = savePage(listingVariable)
