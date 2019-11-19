@@ -46,7 +46,7 @@ def unsavePost(id):
 #Saves all posts of page with given listingVariable
 def savePage(listingVariable):
 	#Query Reddit API
-	if(!unsaveWhenDownload):
+	if not unsaveWhenDownload:
 		post_data = {"after": listingVariable}
 	response = requests.get("https://oauth.reddit.com/user/%s/saved" % username, headers=header, params=post_data)
 	dataResponse = response.json()
