@@ -91,7 +91,6 @@ def savePage(listingVariable):
 				downloadGfycat(url)
 			else:
 				downloadPost(url,fileName)
-				print("download")
 			#Log Post to text file
 			with open(logFile, "a") as myFile:
 				textToAttach = fileName[12:] + "                               " + "https://old.reddit.com" + dataResponse["data"]["children"][x]["data"]["permalink"] + " \n"
