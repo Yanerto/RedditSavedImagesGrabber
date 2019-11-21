@@ -12,6 +12,7 @@ import getpass
 saveFolder = "savedImages/"
 logFile = "logs.txt"
 unsaveWhenDownload = False
+gfycatFormat = "mp4"
 
 #Sends query to get OAuth token
 def getAuthToken(username, AppID, AppSecret, password):
@@ -23,11 +24,11 @@ def getAuthToken(username, AppID, AppSecret, password):
 
 #Downloads image from url and saves as fileName
 def downloadPost(url, fileName):
-
+	global saveFolder
 	#Check if fileName already exists, create new Name with Timestamp if true
 	if os.path.isfile(fileName):
 		ts = time.time()
-		fileName = "savedImages/" + str(ts) + url.split("/")[-1]
+		fileName = saveFolder + str(ts) + url.split("/")[-1]
 
 	#Download file from url
 	try:
@@ -43,8 +44,28 @@ def unsavePost(id):
 	reponse = requests.post("https://oauth.reddit.com/api/unsave", data=post_data, headers = header)
 	return;
 
+def downloadGfycat(url):
+	global gfycatFormat
+	global saveFolder
+	gfycatId = url.split("/")[-1].split("-")[0]
+	gfycatResponse = requests.get("https://api.gfycat.com/v1/gfycats/" + gfycatId)
+	fileURL = ""
+	gfycatJson = gfycatResponse.json()
+	if gfycatFormat == "mp4":
+		fileURL = gfycatJson["gfyItem"]["mp4Url"]
+	if gfycatFormat == "webm":
+		fileURL = gfycatJson["gfyItem"]["webmUrl"]
+	if gfycatFormat == "gif":
+		fileURL = gfycatJson["gfyItem"]["gifUrl"]
+	fileName = saveFolder + fileURL.split("/")[-1]
+	downloadPost(fileURL, fileName)
+	sys.exit("downloaded")
+	return;
+
 #Saves all posts of page with given listingVariable
 def savePage(listingVariable):
+	global saveFolder
+	global logFile
 	#Query Reddit API
 	if not unsaveWhenDownload:
 		post_data = {"after": listingVariable}
@@ -61,14 +82,18 @@ def savePage(listingVariable):
 		url = dataResponse["data"]["children"][x]["data"]["url"]
 		menuListing = "[%d]  " % (x) + url
 		print(menuListing)
-		fileName = "savedImages/" + url.split("/")[-1]
-		whitelist = ['awwni.me', 'i.imgur', 'i.redd.it', 'media.giphy', 'cdn.discordapp']
+		fileName = saveFolder + url.split("/")[-1]
+		whitelist = ['awwni.me', 'i.imgur', 'i.redd.it', 'media.giphy', 'cdn.discordapp', 'gfycat.com']
 
 		#If post URL is in whitelist, aka if post is an image
 		if any(x in url for x in whitelist):
-			downloadPost(url,fileName)
+			if "gfycat.com" in url:
+				downloadGfycat(url)
+			else:
+				downloadPost(url,fileName)
+				print("download")
 			#Log Post to text file
-			with open("logs.txt", "a") as myFile:
+			with open(logFile, "a") as myFile:
 				textToAttach = fileName[12:] + "                               " + "https://old.reddit.com" + dataResponse["data"]["children"][x]["data"]["permalink"] + " \n"
 				myFile.write(textToAttach)
 				if(unsaveWhenDownload):
@@ -91,11 +116,13 @@ def OptionMenu():
 	global saveFolder
 	global logFile
 	global unsaveWhenDownload
+	global gfycatFormat
 	print(30*"=","Options",30*"=")
 	print("1. Change current save Location: %s" % (saveFolder))
 	print("2. Change current log File: %s" % (logFile))
 	print("3. Unsave Posts when downloading?: %s" % (str(unsaveWhenDownload)) )
-	print("4. Back")
+	print("4. Change gfycat format: %s" % (gfycatFormat))
+	print("5. Back")
 	print(69*"=")
 
 	option = getUserInput("")
@@ -119,6 +146,18 @@ def OptionMenu():
 			print("Saved posts will be unsaved when downloading")
 			unsaveWhenDownload = True
 	elif option == 4:
+		print("Please select your gfycat Format")
+		print("1. mp4")
+		print("2. webm")
+		print("3. gif")
+		selection = getUserInput("")
+		if selection == 1:
+			gfycatFormat  = "mp4"
+		elif selection == 2:
+			gfycatFormat = "webm"
+		elif selection == 3:
+			gfycatFormat = "gif"
+	elif option == 5:
 		return;
 
 
